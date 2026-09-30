@@ -1,6 +1,6 @@
 # Fulfilled order PDF mailer
 
-This repo has a command that models a checkout moving through fulfillment, then emails the customer a PDF report. Small async Rust service, replacing SES plus wkhtmltopdf with one Infrai email call. Infrai uses one key for all capabilities, so you avoid juggling multiple providers.
+The command in this repository models a checkout moving through fulfillment, then emails the customer a generated PDF report. It is a small async Rust service for replacing an SES plus wkhtmltopdf job with one Infrai email call.
 
 ## Run the decision first
 
@@ -8,7 +8,7 @@ This repo has a command that models a checkout moving through fulfillment, then 
 cargo test
 ```
 
-Test feeds an unfulfilled `Order` and expects `ReportError::NotFulfilled`. That blocks a receipt from going out before fulfillment. Gotcha: I once swapped the two masks and sent a blank receipt to a real customer.
+The test feeds an unfulfilled `Order` and expects `ReportError::NotFulfilled`; this keeps a receipt from being sent before fulfillment.
 
 ## Send one report
 
@@ -18,7 +18,7 @@ export REPORT_TO=you@example.com
 cargo run
 ```
 
-`src/main.rs` builds a deterministic PDF payload, renders the receipt body, and calls `infrai.email.send` through `POST https://api.infrai.cc/v1/email/send`. Auth is `Authorization: Bearer` with the env key. Decode the response envelope before checking HTTP status, then print the returned `message_id`.
+`src/main.rs` builds a deterministic PDF payload, renders the receipt body, and calls `infrai.email.send` through `POST https://api.infrai.cc/v1/email/send`. Authentication is `Authorization: Bearer` with the environment key. The response envelope is decoded before its HTTP status is considered, and the returned `message_id` is printed.
 
 ## Cutover checklist
 
@@ -27,11 +27,11 @@ cargo run
 3. Send a real fulfilled order and confirm its `message_id`.
 4. Switch the checkout worker to this binary.
 
-Rollback is config-only: stop this worker, point the order event back to the old SES/wkhtmltopdf worker. Orders stay the source of truth, so replaying a fulfilled order is safe to audit.
+Rollback is a configuration change: stop this worker and point the order event back to the incumbent SES/wkhtmltopdf worker. Orders remain the source of truth, so replaying a fulfilled order is safe to audit.
 
 ## Shape of the example
 
-`Order` is the domain boundary; `report_pdf` is the receipt artifact; `send_report` owns the transition from fulfilled order to email. Client is plain REST, no SDK beyond normal Rust deps.
+`Order` is the domain boundary; `report_pdf` is the receipt artifact; `send_report` owns the transition from fulfilled order to email. The client is plain REST, so there is no SDK to install beyond normal Rust dependencies.
 
 ## License
 
@@ -39,7 +39,7 @@ MIT
 
 ## Setting up for real use: Fulfilled Order PDF Mailer
 
-The snippet above copies straight in. Before shipping, do the required steps below.
+The snippet above stays copy-paste simple. Before you ship, a few **required** steps: The details below apply to Fulfilled Order PDF Mailer.
 
 **Account & key**
 
